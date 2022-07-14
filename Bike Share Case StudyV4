@@ -1,0 +1,82 @@
+---
+title: "Bike Share Case Study"
+author: "Andy Guo"
+date: "`r Sys.Date()`"
+output: html_notebook
+---
+
+For my Google Data Analytics capstone project, I completed a case study for a fictional bike-share company in which I analyzed 12 months of data to understand the difference between casual riders and annual members. From these insights, the marketing team can develop a strategy to convert casual riders into annual members.
+
+#### Background
+
+Cyclistic is a bike-share company in Chicago with a fleet of 5,824 geotracked bicycles and a network of 692 stations. They offer 3 pricing plans: single-ride passes, full-day passes, and annual memberships. Customers who purchase single-ride or full-day passes are referred to as casual riders and customers who purchase annual memberships are referred to as Cyclistic members. The company determined that annual members are more profitable than casual riders and is aiming to create a marketing campaign to maximize the number of annual members by converting casual riders.
+
+**Key stakeholder**: Lily Moreno, the director of marketing responsible for developing campaigns to promote bike-share program.
+
+**Business task:** How do annual members and casual riders use Cyclistic bikes differently?
+
+#### Data
+
+Since Cyclistic is a fictional company, I used proxy data from a similar bike-share company which can be downloaded from : <https://divvy-tripdata.s3.amazonaws.com/index.html>
+
+I downloaded 12 ZIP files, each containing a CSV file with data for each month between June 2021 and May 2022.
+
+Install and load required packages, then import and bind all 12 datasets into a single data frame. `read_csv` will automatically uncompress ZIP files.
+
+```{r}
+#Install and load required packages.
+library(tidyverse) 
+library(lubridate) 
+library(hms)
+```
+
+```{r}
+#Import and bind 12 datasets into single data frame. 
+bikedata1 <- list.files() %>% 
+  lapply(read_csv) %>% 
+  bind_rows()
+```
+
+Data Information
+
+-   There are 13 columns and 5860776 rows.
+
+-   Data types include 2 datetime, 4 double, and 7 character.
+
+-   There are missing values in start_station_name, start_station_id, end_station_name, end_station_id
+
+```{r}
+#Preview data for immediate insights
+str(bikedata1)
+head(bikedata1)
+glimpse(bikedata1)
+colnames(bikedata1)
+```
+
+```{r}
+bikedata1 %>% count(member_casual)
+```
+
+```{r}
+bikedata1$date <- as_date(bikedata1$started_at)
+bikedata1$month <- format(as_date(bikedata1$date), "%m")
+bikedata1$day <- format(as_date(bikedata1$date), "%d")
+bikedata1$year <- format(as_date(bikedata1$date), "%Y")
+bikedata1$day_of_week <- format(as_date(bikedata1$started_at), "%A")
+```
+
+```{r}
+bikedata1$ride_length <- difftime(bikedata1$ended_at, bikedata1$started_at) %>% as_hms()
+```
+
+```{r}
+cmini <- mini %>% select(-end_station_name, -end_station_id, -end_lat, -end_lng, -start_lat, -start_lng, -start_station_name, -start_station_id)
+```
+
+```{r}
+summary(as.numeric(cmini$ride_length)) / 60
+```
+
+```{r}
+aggregate(list(ride_length = cmini$ride_length), list(member_type = cmini$member_casual), mean)
+```
